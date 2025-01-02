@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tableau Périodique Interactif</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .navbar-nav .nav-item {
+            margin-right: 20px; 
+        }
+        
+        .navbar-nav .nav-item:last-child {
+            margin-right: 0; 
+        }
+        .custom-spinner {
+            color: #93b012; /* Couleur personnalisée, ici un orange vif */
+            position: relative;
+          }    
+          #logo{
+            width: 5%
+        }
+        .navbar-gradient {
+            background: linear-gradient(to right, #8aa214,  #071d9b); 
+        }        
+
+        :root {
+            --metal-alcalin: #FF5733;
+            --metal-alcalino-terreux: #FFC300;
+            --metal-transition: #DAF7A6;
+            --metal-pauvre: #C70039;
+            --metalloide: #FF5733;
+            --non-metal: #2ECC71;
+            --halogene: #3498DB;
+            --gaz-noble: #9B59B6;
+            --lanthanide: #E74C3C;
+            --actinide: #F1C40F;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: #fff;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+            animation: fadeIn 1s ease-out;
+            margin-top: 0.5%;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(to right, #4facfe, #00f2fe);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+            animation: slideIn 1s ease-out;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+
+        .periodic-table {
+            display: grid;
+            grid-template-columns: repeat(18, minmax(70px, 1fr));
+            gap: 4px;
+            max-width: 1800px;
+            margin: 1%;
+            perspective: 1000px;
+        }
+
+        .element {
+            position: relative;
+            padding: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            animation: fadeInScale 0.5s ease-out backwards;
+        }
+
+        .element:hover {
+            transform: translateZ(20px) rotate(5deg);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+        }
+
+        .element-content {
+            text-align: center;
+        }
+
+        .atomic-number {
+            font-size: 0.8rem;
+            position: absolute;
+            top: 4px;
+            left: 4px;
+        }
+
+        .symbol {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 0.5rem 0;
+        }
+
+        .name {
+            font-size: 0.7rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            background: rgba(255, 255, 255, 0.95);
+            color: #000;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .popup.active {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .popup-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .popup-title {
+            font-size: 1.8rem;
+            color: #2c3e50;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #e74c3c;
+            padding: 0.5rem;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background: rgba(231, 76, 60, 0.1);
+            transform: rotate(90deg);
+        }
+
+        .element-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin: 5rem 0;
+        }
+
+        .detail-item {
+            padding: 0.5rem;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 8px;
+        }
+
+        .detail-label {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+            margin-bottom: 0.2rem;
+        }
+
+        .detail-value {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        @media (max-width: 1200px) {
+            .periodic-table {
+                grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+                padding: 1rem;
+            }
+
+            .element {
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-gradient">  
+        <img id="logo" src="aaqq.png" alt="">
+          <div class="container-fluid">
+              <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                  <span class="navbar-toggler-icon"></span>
+              </button>
+              <div class="collapse navbar-collapse" id="navbarNav">
+                  <ul class="navbar-nav">
+                      <li class="nav-item">
+                          <a class="nav-link" href="statistique.html">Accueil</a>
+                      </li>
+                      <li class="nav-item">
+                        <a class="nav-link" href="contact.html">Fonctionnalités</a>
+                      </li>
+                      <li class="nav-item">
+                          <a class="nav-link" href="contact.html">À propos</a>
+                      </li>  
+                      <a class="navbar-brand" href="index.html">Quaternion+</a>
+                  </ul>
+              </div>
+          </div>
+      </nav>
+
+    <div class="header">
+        <h1>Tableau Périodique des Éléments</h1>
+    </div>
+
+    <div class="legend">
+        <div class="legend-item">
+            <div class="legend-color" style="background: var(--metal-alcalin)"></div>
+            <span>Métaux alcalins</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: var(--metal-alcalino-terreux)"></div>
+            <span>Métaux alcalino-terreux</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: var(--metal-transition)"></div>
+            <span>Métaux de transition</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: var(--non-metal)"></div>
+            <span>Non-métaux</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: var(--halogene)"></div>
+            <span>Halogènes</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: var(--gaz-noble)"></div>
+            <span>Gaz nobles</span>
+        </div>
+    </div>
+    <div class="periodic-table" id="periodicTable">
+        <!-- Les éléments seront ajoutés via JavaScript -->
+    </div>
+
+    <div class="popup" id="popup">
+        <div class="popup-header">
+            <h2 class="popup-title" id="popupTitle"></h2>
+            <button class="close-btn" onclick="closePopup()">×</button>
+        </div>
+        <div class="element-details" id="elementDetails">
+            <!-- Les détails seront ajoutés via JavaScript -->
+        </div>
+    </div>
+
+    <div class="overlay" id="overlay" onclick="closePopup()"></div>
+
+    <script>
+        // Données des éléments (exemple partiel)
+         const elements = [
+    { symbol: 'H', name: 'Hydrogène', atomicNumber: 1, atomicMass: '1.008', electronConfig: '1s¹', category: 'non-metal', description: "Élément le plus léger et le plus abondant de l'univers." },
+    { symbol: 'He', name: 'Hélium', atomicNumber: 2, atomicMass: '4.0026', electronConfig: '1s²', category: 'gaz-noble', description: "Gaz noble inerte utilisé dans les ballons et la cryogénie." },
+    { symbol: 'Li', name: 'Lithium', atomicNumber: 3, atomicMass: '6.94', electronConfig: '[He] 2s¹', category: 'metal-alcalin', description: "Métal alcalin léger utilisé dans les batteries." },
+    { symbol: 'Be', name: 'Béryllium', atomicNumber: 4, atomicMass: '9.0122', electronConfig: '[He] 2s²', category: 'metal-alcalino-terreux', description: "Métal rigide utilisé dans les alliages et l'aérospatiale." },
+    { symbol: 'B', name: 'Bore', atomicNumber: 5, atomicMass: '10.81', electronConfig: '[He] 2s² 2p¹', category: 'metalloide', description: "Métalloïde essentiel dans les semi-conducteurs." },
+    { symbol: 'C', name: 'Carbone', atomicNumber: 6, atomicMass: '12.011', electronConfig: '[He] 2s² 2p²', category: 'non-metal', description: "Base de toutes les molécules organiques." },
+    { symbol: 'N', name: 'Azote', atomicNumber: 7, atomicMass: '14.007', electronConfig: '[He] 2s² 2p³', category: 'non-metal', description: "Gaz majeur dans l'atmosphère terrestre." },
+    { symbol: 'O', name: 'Oxygène', atomicNumber: 8, atomicMass: '15.999', electronConfig: '[He] 2s² 2p⁴', category: 'non-metal', description: "Essentiel à la respiration et à la combustion." },
+    { symbol: 'F', name: 'Fluor', atomicNumber: 9, atomicMass: '18.998', electronConfig: '[He] 2s² 2p⁵', category: 'halogene', description: "Halogène très réactif utilisé dans les dentifrices." },
+    { symbol: 'Ne', name: 'Néon', atomicNumber: 10, atomicMass: '20.180', electronConfig: '[He] 2s² 2p⁶', category: 'gaz-noble', description: "Gaz utilisé dans les enseignes lumineuses." },
+    { symbol: 'Na', name: 'Sodium', atomicNumber: 11, atomicMass: '22.990', electronConfig: '[Ne] 3s¹', category: 'metal-alcalin', description: "Métal alcalin réactif présent dans le sel de table." },
+    { symbol: 'Mg', name: 'Magnésium', atomicNumber: 12, atomicMass: '24.305', electronConfig: '[Ne] 3s²', category: 'metal-alcalino-terreux', description: "Métal léger utilisé dans les alliages et essentiel à la biologie." },
+    { symbol: 'Al', name: 'Aluminium', atomicNumber: 13, atomicMass: '26.982', electronConfig: '[Ne] 3s² 3p¹', category: 'metal-pauvre', description: "Métal abondant utilisé dans l'industrie et les emballages." },
+    { symbol: 'Si', name: 'Silicium', atomicNumber: 14, atomicMass: '28.085', electronConfig: '[Ne] 3s² 3p²', category: 'metalloide', description: "Essentiel dans la fabrication des semi-conducteurs." },
+    { symbol: 'P', name: 'Phosphore', atomicNumber: 15, atomicMass: '30.974', electronConfig: '[Ne] 3s² 3p³', category: 'non-metal', description: "Composant clé des ADN, ARN et membranes cellulaires." },
+    { symbol: 'S', name: 'Soufre', atomicNumber: 16, atomicMass: '32.06', electronConfig: '[Ne] 3s² 3p⁴', category: 'non-metal', description: "Utilisé dans les engrais et les produits chimiques." },
+    { symbol: 'Cl', name: 'Chlore', atomicNumber: 17, atomicMass: '35.45', electronConfig: '[Ne] 3s² 3p⁵', category: 'halogene', description: "Désinfectant puissant pour l'eau potable." },
+    { symbol: 'Ar', name: 'Argon', atomicNumber: 18, atomicMass: '39.948', electronConfig: '[Ne] 3s² 3p⁶', category: 'gaz-noble', description: "Gaz inerte utilisé dans les lampes et l'industrie." },
+    { symbol: 'K', name: 'Potassium', atomicNumber: 19, atomicMass: '39.098', electronConfig: '[Ar] 4s¹', category: 'metal-alcalin', description: "Métal réactif essentiel à la biologie cellulaire." },
+    { symbol: 'Ca', name: 'Calcium', atomicNumber: 20, atomicMass: '40.078', electronConfig: '[Ar] 4s²', category: 'metal-alcalino-terreux', description: "Présent dans les os et les dents." },
+    { symbol: 'Sc', name: 'Scandium', atomicNumber: 21, atomicMass: '44.956', electronConfig: '[Ar] 3d¹ 4s²', category: 'metal-transition', description: "Métal de transition utilisé dans les alliages." },
+    { symbol: 'Ti', name: 'Titane', atomicNumber: 22, atomicMass: '47.867', electronConfig: '[Ar] 3d² 4s²', category: 'metal-transition', description: "Métal léger, robuste et résistant à la corrosion." },
+    { symbol: 'V', name: 'Vanadium', atomicNumber: 23, atomicMass: '50.942', electronConfig: '[Ar] 3d³ 4s²', category: 'metal-transition', description: "Utilisé dans les alliages d'acier." },
+    { symbol: 'Cr', name: 'Chrome', atomicNumber: 24, atomicMass: '51.996', electronConfig: '[Ar] 3d⁵ 4s¹', category: 'metal-transition', description: "Utilisé pour la résistance à la corrosion et la brillance." },
+    { symbol: 'Mn', name: 'Manganèse', atomicNumber: 25, atomicMass: '54.938', electronConfig: '[Ar] 3d⁵ 4s²', category: 'metal-transition', description: "Utilisé dans la production d'acier." },
+    { symbol: 'Fe', name: 'Fer', atomicNumber: 26, atomicMass: '55.845', electronConfig: '[Ar] 3d⁶ 4s²', category: 'metal-transition', description: "Composant principal de l'acier." },
+    { symbol: 'Co', name: 'Cobalt', atomicNumber: 27, atomicMass: '58.933', electronConfig: '[Ar] 3d⁷ 4s²', category: 'metal-transition', description: "Utilisé dans les alliages magnétiques." },
+    { symbol: 'Ni', name: 'Nickel', atomicNumber: 28, atomicMass: '58.693', electronConfig: '[Ar] 3d⁸ 4s²', category: 'metal-transition', description: "Résistant à la corrosion, utilisé dans les pièces de monnaie." },
+    { symbol: 'Cu', name: 'Cuivre', atomicNumber: 29, atomicMass: '63.546', electronConfig: '[Ar] 3d¹⁰ 4s¹', category: 'metal-transition', description: "Conduit bien l'électricité, utilisé dans les câbles." },
+    { symbol: 'Zn', name: 'Zinc', atomicNumber: 30, atomicMass: '65.38', electronConfig: '[Ar] 3d¹⁰ 4s²', category: 'metal-transition', description: "Utilisé dans la galvanisation pour prévenir la rouille." },
+    { symbol: 'Ga', name: 'Gallium', atomicNumber: 31, atomicMass: '69.723', electronConfig: '[Ar] 3d¹⁰ 4s² 4p¹', category: 'metal-pauvre', description: "Utilisé dans l'électronique et les LED." },
+    { symbol: 'Ge', name: 'Germanium', atomicNumber: 32, atomicMass: '72.630', electronConfig: '[Ar] 3d¹⁰ 4s² 4p²', category: 'metalloide', description: "Utilisé dans les semi-conducteurs et les fibres optiques." },
+    { symbol: 'As', name: 'Arsenic', atomicNumber: 33, atomicMass: '74.922', electronConfig: '[Ar] 3d¹⁰ 4s² 4p³', category: 'metalloide', description: "Toxique, utilisé dans certains alliages et pesticides." },
+    { symbol: 'Se', name: 'Sélénium', atomicNumber: 34, atomicMass: '78.971', electronConfig: '[Ar] 3d¹⁰ 4s² 4p⁴', category: 'non-metal', description: "Utilisé dans les cellules photovoltaïques et les photocopieurs." },
+    { symbol: 'Br', name: 'Brome', atomicNumber: 35, atomicMass: '79.904', electronConfig: '[Ar] 3d¹⁰ 4s² 4p⁵', category: 'halogene', description: "Liquide rougeâtre utilisé dans les désinfectants et les retardateurs de flamme." },
+    { symbol: 'Kr', name: 'Krypton', atomicNumber: 36, atomicMass: '83.798', electronConfig: '[Ar] 3d¹⁰ 4s² 4p⁶', category: 'gaz-noble', description: "Utilisé dans l'éclairage et certaines lasers." },
+    { symbol: 'Rb', name: 'Rubidium', atomicNumber: 37, atomicMass: '85.468', electronConfig: '[Kr] 5s¹', category: 'metal-alcalin', description: "Métal réactif utilisé dans certaines cellules photoélectriques." },
+    { symbol: 'Sr', name: 'Strontium', atomicNumber: 38, atomicMass: '87.62', electronConfig: '[Kr] 5s²', category: 'metal-alcalino-terreux', description: "Utilisé dans les feux d'artifice pour produire une couleur rouge vif." },
+    { symbol: 'Y', name: 'Yttrium', atomicNumber: 39, atomicMass: '88.906', electronConfig: '[Kr] 4d¹ 5s²', category: 'metal-transition', description: "Utilisé dans les lasers et la technologie des écrans." },
+    { symbol: 'Zr', name: 'Zirconium', atomicNumber: 40, atomicMass: '91.224', electronConfig: '[Kr] 4d² 5s²', category: 'metal-transition', description: "Utilisé dans les réacteurs nucléaires et les céramiques." },
+    { symbol: 'Nb', name: 'Niobium', atomicNumber: 41, atomicMass: '92.906', electronConfig: '[Kr] 4d⁴ 5s¹', category: 'metal-transition', description: "Utilisé dans les alliages et la supraconductivité." },
+    { symbol: 'Mo', name: 'Molybdène', atomicNumber: 42, atomicMass: '95.95', electronConfig: '[Kr] 4d⁵ 5s¹', category: 'metal-transition', description: "Utilisé dans les alliages à haute résistance et les lubrifiants." },
+    { symbol: 'Tc', name: 'Technétium', atomicNumber: 43, atomicMass: '(98)', electronConfig: '[Kr] 4d⁵ 5s²', category: 'metal-transition', description: "Premier élément synthétique, utilisé en médecine nucléaire." },
+    { symbol: 'Ru', name: 'Ruthénium', atomicNumber: 44, atomicMass: '101.07', electronConfig: '[Kr] 4d⁷ 5s¹', category: 'metal-transition', description: "Utilisé dans les contacts électriques et la catalyse." },
+    { symbol: 'Rh', name: 'Rhodium', atomicNumber: 45, atomicMass: '102.91', electronConfig: '[Kr] 4d⁸ 5s¹', category: 'metal-transition', description: "Utilisé dans les convertisseurs catalytiques et les bijoux." },
+    { symbol: 'Pd', name: 'Palladium', atomicNumber: 46, atomicMass: '106.42', electronConfig: '[Kr] 4d¹⁰', category: 'metal-transition', description: "Utilisé dans les convertisseurs catalytiques et l'industrie chimique." },
+    { symbol: 'Ag', name: 'Argent', atomicNumber: 47, atomicMass: '107.87', electronConfig: '[Kr] 4d¹⁰ 5s¹', category: 'metal-transition', description: "Métal précieux utilisé en bijouterie et électronique." },
+    { symbol: 'Cd', name: 'Cadmium', atomicNumber: 48, atomicMass: '112.41', electronConfig: '[Kr] 4d¹⁰ 5s²', category: 'metal-transition', description: "Utilisé dans les batteries et les pigments." },
+    { symbol: 'In', name: 'Indium', atomicNumber: 49, atomicMass: '114.82', electronConfig: '[Kr] 4d¹⁰ 5s² 5p¹', category: 'metal-pauvre', description: "Utilisé dans les écrans tactiles et les alliages." },
+    { symbol: 'Sn', name: 'Étain', atomicNumber: 50, atomicMass: '118.71', electronConfig: '[Kr] 4d¹⁰ 5s² 5p²', category: 'metal-pauvre', description: "Utilisé dans les alliages et la soudure." },
+    { symbol: 'Sb', name: 'Antimoine', atomicNumber: 51, atomicMass: '121.76', electronConfig: '[Kr] 4d¹⁰ 5s² 5p³', category: 'metalloide', description: "Utilisé dans les alliages et les semi-conducteurs." },
+    { symbol: 'Te', name: 'Tellure', atomicNumber: 52, atomicMass: '127.60', electronConfig: '[Kr] 4d¹⁰ 5s² 5p⁴', category: 'metalloide', description: "Utilisé dans les alliages et les panneaux solaires." },
+    { symbol: 'I', name: 'Iode', atomicNumber: 53, atomicMass: '126.90', electronConfig: '[Kr] 4d¹⁰ 5s² 5p⁵', category: 'halogene', description: "Utilisé en médecine et comme désinfectant." },
+    { symbol: 'Xe', name: 'Xénon', atomicNumber: 54, atomicMass: '131.29', electronConfig: '[Kr] 4d¹⁰ 5s² 5p⁶', category: 'gaz-noble', description: "Utilisé dans les lampes flash et l'anesthésie." },
+    { symbol: 'Cs', name: 'Césium', atomicNumber: 55, atomicMass: '132.91', electronConfig: '[Xe] 6s¹', category: 'metal-alcalin', description: "Métal très réactif, utilisé dans les horloges atomiques." },
+    { symbol: 'Ba', name: 'Baryum', atomicNumber: 56, atomicMass: '137.33', electronConfig: '[Xe] 6s²', category: 'metal-alcalino-terreux', description: "Utilisé dans les tests médicaux et les feux d'artifice." },
+    { symbol: 'La', name: 'Lanthane', atomicNumber: 57, atomicMass: '138.91', electronConfig: '[Xe] 5d¹ 6s²', category: 'lanthanide', description: "Utilisé dans les alliages et les verres optiques." },
+    { symbol: 'Ce', name: 'Cérium', atomicNumber: 58, atomicMass: '140.12', electronConfig: '[Xe] 4f¹ 5d¹ 6s²', category: 'lanthanide', description: "Utilisé dans les catalyseurs et les pierres à briquet." },
+    { symbol: 'Pr', name: 'Praséodyme', atomicNumber: 59, atomicMass: '140.91', electronConfig: '[Xe] 4f³ 6s²', category: 'lanthanide', description: "Utilisé dans les aimants puissants et les alliages." },
+    { symbol: 'Nd', name: 'Néodyme', atomicNumber: 60, atomicMass: '144.24', electronConfig: '[Xe] 4f⁴ 6s²', category: 'lanthanide', description: "Utilisé dans les aimants, lasers et turbines éoliennes." },
+    { symbol: 'Pm', name: 'Prométhium', atomicNumber: 61, atomicMass: '(145)', electronConfig: '[Xe] 4f⁵ 6s²', category: 'lanthanide', description: "Radioactif, utilisé dans les peintures luminescentes." },
+    { symbol: 'Sm', name: 'Samarium', atomicNumber: 62, atomicMass: '150.36', electronConfig: '[Xe] 4f⁶ 6s²', category: 'lanthanide', description: "Utilisé dans les aimants et la médecine." },
+    { symbol: 'Eu', name: 'Europium', atomicNumber: 63, atomicMass: '151.96', electronConfig: '[Xe] 4f⁷ 6s²', category: 'lanthanide', description: "Utilisé dans les écrans TV et les lampes fluorescentes." },
+    { symbol: 'Gd', name: 'Gadolinium', atomicNumber: 64, atomicMass: '157.25', electronConfig: '[Xe] 4f⁷ 5d¹ 6s²', category: 'lanthanide', description: "Utilisé dans les IRM et les alliages spéciaux." },
+    { symbol: 'Tb', name: 'Terbium', atomicNumber: 65, atomicMass: '158.93', electronConfig: '[Xe] 4f⁹ 6s²', category: 'lanthanide', description: "Utilisé dans les écrans et les dispositifs magnétiques." },
+    { symbol: 'Dy', name: 'Dysprosium', atomicNumber: 66, atomicMass: '162.50', electronConfig: '[Xe] 4f¹⁰ 6s²', category: 'lanthanide', description: "Utilisé dans les aimants puissants et les lasers." },
+    { symbol: 'Ho', name: 'Holmium', atomicNumber: 67, atomicMass: '164.93', electronConfig: '[Xe] 4f¹¹ 6s²', category: 'lanthanide', description: "Utilisé dans les lasers et les applications magnétiques." },
+    { symbol: 'Er', name: 'Erbium', atomicNumber: 68, atomicMass: '167.26', electronConfig: '[Xe] 4f¹² 6s²', category: 'lanthanide', description: "Utilisé dans les amplificateurs optiques et les alliages." },
+    { symbol: 'Tm', name: 'Thulium', atomicNumber: 69, atomicMass: '168.93', electronConfig: '[Xe] 4f¹³ 6s²', category: 'lanthanide', description: "Utilisé dans les lasers médicaux et la radiographie portable." },
+    { symbol: 'Yb', name: 'Ytterbium', atomicNumber: 70, atomicMass: '173.05', electronConfig: '[Xe] 4f¹⁴ 6s²', category: 'lanthanide', description: "Utilisé dans les alliages et les horloges atomiques." },
+    { symbol: 'Lu', name: 'Lutétium', atomicNumber: 71, atomicMass: '174.97', electronConfig: '[Xe] 4f¹⁴ 5d¹ 6s²', category: 'lanthanide', description: "Utilisé en radiothérapie et en catalyse." },
+    { symbol: 'Hf', name: 'Hafnium', atomicNumber: 72, atomicMass: '178.49', electronConfig: '[Xe] 4f¹⁴ 5d² 6s²', category: 'metal-transition', description: "Utilisé dans les réacteurs nucléaires et les alliages." },
+    { symbol: 'Ta', name: 'Tantale', atomicNumber: 73, atomicMass: '180.95', electronConfig: '[Xe] 4f¹⁴ 5d³ 6s²', category: 'metal-transition', description: "Utilisé dans l'électronique et la fabrication de condensateurs." },
+    { symbol: 'W', name: 'Tungstène', atomicNumber: 74, atomicMass: '183.84', electronConfig: '[Xe] 4f¹⁴ 5d⁴ 6s²', category: 'metal-transition', description: "Utilisé dans les filaments d'ampoule et les outils." },
+    { symbol: 'Re', name: 'Rhénium', atomicNumber: 75, atomicMass: '186.21', electronConfig: '[Xe] 4f¹⁴ 5d⁵ 6s²', category: 'metal-transition', description: "Utilisé dans les alliages haute température." },
+    { symbol: 'Os', name: 'Osmium', atomicNumber: 76, atomicMass: '190.23', electronConfig: '[Xe] 4f¹⁴ 5d⁶ 6s²', category: 'metal-transition', description: "Utilisé dans les contacts électriques et les alliages." },
+    { symbol: 'Ir', name: 'Iridium', atomicNumber: 77, atomicMass: '192.22', electronConfig: '[Xe] 4f¹⁴ 5d⁷ 6s²', category: 'metal-transition', description: "Utilisé dans les alliages et les connecteurs électriques." },
+    { symbol: 'Pt', name: 'Platine', atomicNumber: 78, atomicMass: '195.08', electronConfig: '[Xe] 4f¹⁴ 5d⁹ 6s¹', category: 'metal-transition', description: "Métal précieux utilisé en bijouterie et catalyseurs." },
+    { symbol: 'Au', name: 'Or', atomicNumber: 79, atomicMass: '196.97', electronConfig: '[Xe] 4f¹⁴ 5d¹⁰ 6s¹', category: 'metal-transition', description: "Utilisé en bijouterie et comme réserve de valeur." },
+    { symbol: 'Hg', name: 'Mercure', atomicNumber: 80, atomicMass: '200.59', electronConfig: '[Xe] 4f¹⁴ 5d¹⁰ 6s²', category: 'metal-transition', description: "Utilisé dans les thermomètres et baromètres." },
+    { symbol: 'Tl', name: 'Thallium', atomicNumber: 81, atomicMass: '204.38', electronConfig: '[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p¹', category: 'metal-pauvre', description: "Toxique, utilisé dans l'électronique." },
+    { symbol: 'Pb', name: 'Plomb', atomicNumber: 82, atomicMass: '207.2', electronConfig: '[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p²', category: 'metal-pauvre', description: "Utilisé dans les batteries et les écrans contre les radiations." },
+    { symbol: 'Bi', name: 'Bismuth', atomicNumber: 83, atomicMass: '208.98', electronConfig: '[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p³', category: 'metal-pauvre', description: "Utilisé dans les alliages et la médecine." },
+    { symbol: 'Po', name: 'Polonium', atomicNumber: 84, atomicMass: '(209)', electronConfig: '[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p⁴', category: 'metalloide', description: "Radioactif, utilisé dans les sources d'énergie." },
+    { symbol: 'At', name: 'Astate', atomicNumber: 85, atomicMass: '(210)', electronConfig: '[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p⁵', category: 'halogene', description: "Radioactif, peu étudié." },
+    { symbol: 'Rn', name: 'Radon', atomicNumber: 86, atomicMass: '(222)', electronConfig: '[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p⁶', category: 'gaz-noble', description: "Gaz radioactif utilisé dans la médecine." },
+    { symbol: 'Fr', name: 'Francium', atomicNumber: 87, atomicMass: '(223)', electronConfig: '[Rn] 7s¹', category: 'metal-alcalin', description: "Extrêmement rare et instable." },
+    { symbol: 'Ra', name: 'Radium', atomicNumber: 88, atomicMass: '(226)', electronConfig: '[Rn] 7s²', category: 'metal-alcalino-terreux', description: "Radioactif, utilisé dans les peintures luminescentes." },
+    { symbol: 'Ac', name: 'Actinium', atomicNumber: 89, atomicMass: '(227)', electronConfig: '[Rn] 6d¹ 7s²', category: 'actinide', description: "Radioactif, utilisé dans certains traitements médicaux." },
+    { symbol: 'Th', name: 'Thorium', atomicNumber: 90, atomicMass: '232.04', electronConfig: '[Rn] 6d² 7s²', category: 'actinide', description: "Utilisé comme combustible nucléaire." },
+    { symbol: 'Pa', name: 'Protactinium', atomicNumber: 91, atomicMass: '231.04', electronConfig: '[Rn] 5f² 6d¹ 7s²', category: 'actinide', description: "Rare, utilisé dans les recherches nucléaires." },
+    { symbol: 'U', name: 'Uranium', atomicNumber: 92, atomicMass: '238.03', electronConfig: '[Rn] 5f³ 6d¹ 7s²', category: 'actinide', description: "Utilisé dans les réacteurs nucléaires et les armes." },
+    { symbol: 'Np', name: 'Neptunium', atomicNumber: 93, atomicMass: '237', electronConfig: '[Rn] 5f⁴ 6d¹ 7s²', category: 'actinide', description: "Utilisé dans la recherche nucléaire." },
+    { symbol: 'Pu', name: 'Plutonium', atomicNumber: 94, atomicMass: '244', electronConfig: '[Rn] 5f⁶ 6d¹ 7s²', category: 'actinide', description: "Radioactif, utilisé dans les réacteurs nucléaires." },
+    { symbol: 'Am', name: 'Américium', atomicNumber: 95, atomicMass: '243', electronConfig: '[Rn] 5f⁷ 6d¹ 7s²', category: 'actinide', description: "Utilisé dans les détecteurs de fumée." },
+    { symbol: 'Cm', name: 'Curium', atomicNumber: 96, atomicMass: '247', electronConfig: '[Rn] 5f⁷ 6d² 7s²', category: 'actinide', description: "Utilisé dans la recherche scientifique et les piles nucléaires." },
+    { symbol: 'Bk', name: 'Berkélium', atomicNumber: 97, atomicMass: '247', electronConfig: '[Rn] 5f⁸ 6d¹ 7s²', category: 'actinide', description: "Synthétique, utilisé dans les recherches nucléaires." },
+    { symbol: 'Cf', name: 'Californium', atomicNumber: 98, atomicMass: '251', electronConfig: '[Rn] 5f¹⁰ 6d¹ 7s²', category: 'actinide', description: "Utilisé dans la recherche et les applications nucléaires." },
+    { symbol: 'Es', name: 'Einsteinium', atomicNumber: 99, atomicMass: '252', electronConfig: '[Rn] 5f¹¹ 6d¹ 7s²', category: 'actinide', description: "Synthétique, utilisé dans la recherche scientifique." },
+    { symbol: 'Fm', name: 'Fermium', atomicNumber: 100, atomicMass: '257', electronConfig: '[Rn] 5f¹² 6d¹ 7s²', category: 'actinide', description: "Synthétique, utilisé dans les recherches nucléaires." },
+    { symbol: 'Md', name: 'Mendelevium', atomicNumber: 101, atomicMass: '258', electronConfig: '[Rn] 5f¹³ 6d¹ 7s²', category: 'actinide', description: "Synthétique, utilisé dans la recherche en physique nucléaire." },
+    { symbol: 'No', name: 'Nobelium', atomicNumber: 102, atomicMass: '259', electronConfig: '[Rn] 5f¹⁴ 6d¹ 7s²', category: 'actinide', description: "Synthétique, utilisé dans les recherches en physique nucléaire." },
+    { symbol: 'Lr', name: 'Lawrencium', atomicNumber: 103, atomicMass: '262', electronConfig: '[Rn] 5f¹⁴ 6d² 7s²', category: 'actinide', description: "Synthétique, utilisé dans les recherches nucléaires." },
+    { symbol: 'Rf', name: 'Rutherfordium', atomicNumber: 104, atomicMass: '267', electronConfig: '[Rn] 5f¹⁴ 6d² 7s²', category: 'transition metal', description: "Synthétique, utilisé dans les recherches en physique." },
+    { symbol: 'Db', name: 'Dubnium', atomicNumber: 105, atomicMass: '270', electronConfig: '[Rn] 5f¹⁴ 6d³ 7s²', category: 'transition metal', description: "Synthétique, utilisé dans la recherche scientifique." },
+    { symbol: 'Sg', name: 'Seaborgium', atomicNumber: 106, atomicMass: '271', electronConfig: '[Rn] 5f¹⁴ 6d⁴ 7s²', category: 'transition metal', description: "Synthétique, utilisé dans les recherches en physique." },
+    { symbol: 'Bh', name: 'Bohrium', atomicNumber: 107, atomicMass: '270', electronConfig: '[Rn] 5f¹⁴ 6d⁵ 7s²', category: 'transition metal', description: "Synthétique, utilisé dans les recherches en physique." },
+    { symbol: 'Hs', name: 'Hassium', atomicNumber: 108, atomicMass: '277', electronConfig: '[Rn] 5f¹⁴ 6d⁶ 7s²', category: 'transition metal', description: "Synthétique, utilisé dans les recherches en physique." },
+    { symbol: 'Mt', name: 'Meitnerium', atomicNumber: 109, atomicMass: '278', electronConfig: '[Rn] 5f¹⁴ 6d⁷ 7s²', category: 'transition metal', description: "Synthétique, utilisé dans les recherches scientifiques." },
+    { symbol: 'Ds', name: 'Darmstadtium', atomicNumber: 110, atomicMass: '281', electronConfig: '[Rn] 5f¹⁴ 6d⁸ 7s²', category: 'transition metal', description: "Synthétique, utilisé dans la recherche scientifique." },
+    { symbol: 'Rg', name: 'Roentgenium', atomicNumber: 111, atomicMass: '280', electronConfig: '[Rn] 5f¹⁴ 6d⁹ 7s²', category: 'transition metal', description: "Synthétique, utilisé dans la recherche scientifique." },
+    { symbol: 'Cn', name: 'Copernicium', atomicNumber: 112, atomicMass: '285', electronConfig: '[Rn] 5f¹⁴ 6d¹⁰ 7s²', category: 'transition metal', description: "Synthétique, utilisé dans les recherches scientifiques." },
+    { symbol: 'Uut', name: 'Ununtrium', atomicNumber: 113, atomicMass: '284', electronConfig: '[Rn] 5f¹⁴ 6d¹⁰ 7s²', category: 'post-transition metal', description: "Synthétique, utilisé dans les recherches scientifiques." },
+    { symbol: 'Fl', name: 'Flerovium', atomicNumber: 114, atomicMass: '289', electronConfig: '[Rn] 5f¹⁴ 6d¹⁰ 7s² 7p²', category: 'post-transition metal', description: "Synthétique, utilisé dans les recherches scientifiques." },
+    { symbol: 'Uup', name: 'Ununpentium', atomicNumber: 115, atomicMass: '290', electronConfig: '[Rn] 5f¹⁴ 6d¹⁰ 7s² 7p³', category: 'post-transition metal', description: "Synthétique, utilisé dans les recherches scientifiques." },
+    { symbol: 'Lv', name: 'Livermorium', atomicNumber: 116, atomicMass: '293', electronConfig: '[Rn] 5f¹⁴ 6d¹⁰ 7s² 7p⁴', category: 'post-transition metal', description: "Synthétique, utilisé dans les recherches scientifiques." },
+    { symbol: 'Uus', name: 'Ununseptium', atomicNumber: 117, atomicMass: '294', electronConfig: '[Rn] 5f¹⁴ 6d¹⁰ 7s² 7p⁵', category: 'halogen', description: "Synthétique, utilisé dans les recherches scientifiques." },
+    { symbol: 'Og', name: 'Oganesson', atomicNumber: 118, atomicMass: '(294)', electronConfig: '[Rn] 5f¹⁴ 6d¹⁰ 7s² 7p⁶', category: 'gaz-noble', description: "Élément synthétique et extrêmement instable." }
+
+];
+
+            // Ajoutez tous les autres éléments ici
+
+        // Fonction pour créer les éléments du tableau
+        function createPeriodicTable() {
+            const table = document.getElementById('periodicTable');
+            elements.forEach((element, index) => {
+                const delay = index * 0.05;
+                const elementDiv = document.createElement('div');
+                elementDiv.className = `element ${element.category}`;
+                elementDiv.style.backgroundColor = `var(--${element.category})`;
+                elementDiv.style.animationDelay = `${delay}s`;
+                elementDiv.innerHTML = `
+                    <div class="element-content">
+                        <span class="atomic-number">${element.atomicNumber}</span>
+                        <div class="symbol">${element.symbol}</div>
+                        <div class="name">${element.name}</div>
+                    </div>
+                `;
+                elementDiv.onclick = () => showPopup(element);
+                table.appendChild(elementDiv);
+            });
+        }
+
+        function showPopup(element) {
+            const popup = document.getElementById('popup');
+            const overlay = document.getElementById('overlay');
+            const popupTitle = document.getElementById('popupTitle');
+            const elementDetails = document.getElementById('elementDetails');
+
+            popupTitle.textContent = `${element.name} (${element.symbol})`;
+            elementDetails.innerHTML = `
+                <div class="detail-item">
+                    <div class="detail-label">Numéro atomique</div>
+                    <div class="detail-value">${element.atomicNumber}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Masse atomique</div>
+                    <div class="detail-value">${element.atomicMass}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Configuration électronique</div>
+                    <div class="detail-value">${element.electronConfig}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Catégorie</div>
+                    <div class="detail-value">${element.category}</div>
+                </div>
+            `;
+
+            popup.classList.add('active');
+            overlay.classList.add('active');
+        }
+
+        function closePopup() {
+            const popup = document.getElementById('popup');
+            const overlay = document.getElementById('overlay');
+            popup.classList.remove('active');
+            overlay.classList.remove('active');
+        }
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', createPeriodicTable);
+    </script>
+</body>
+</html>
